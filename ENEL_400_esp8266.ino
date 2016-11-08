@@ -22,13 +22,13 @@
 
 // Set these to run example.
 #define FIREBASE_HOST "aquaponics-monitoring.firebaseio.com"
-#define FIREBASE_AUTH ""
+#define FIREBASE_AUTH "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
 #define WIFI_SSID "airuc-guest"
 
 struct VariableAndValue
 {
   String variable;
-  double value;
+  float value;
 };
 
 void setup() {
@@ -36,7 +36,8 @@ void setup() {
 
   // connect to wifi.
   WiFi.begin(WIFI_SSID);
-  Serial.println("connecting to " + WIFI_SSID);
+  Serial.print("connecting to ");
+  Serial.print(WIFI_SSID);
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(500);
@@ -53,17 +54,31 @@ int i = 0;
 void loop() {
 
   if (Serial.available()) {
-    String test = Serial.readString();
-    int x = test.toInt();
-    Serial.println(test);
-    String path = (String)"realTimeAmbientLight";
-    Firebase.set(path, x);
+    String stringRead = Serial.readString();
+    if (stringRead == "PUMP")
+    {
+      Serial.print((String)Firebase.getInt("pumpShouldBeOn"));
+    }
+    else
+    {
+      VariableAndValue variableAndValue = getVariableAndValue(stringRead);
+      Firebase.set(variableAndValue.variable, variableAndValue.value);
+    }
   }
 }
 
 VariableAndValue getVariableAndValue(String input)
 {
   VariableAndValue output;
+  int colonLocation = input.indexOf(":");
+  if (colonLocation == -1 || colonLocation + 1 == input.length())
+  {
+    output.variable = "Error";
+    output.value = 1;
+    return output;
+  }
+  output.variable = input.substring(0, colonLocation);
+  output.value = input.substring(colonLocation + 1).toFloat();
   return output;
 }
 
