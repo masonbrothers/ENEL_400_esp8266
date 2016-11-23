@@ -1,4 +1,11 @@
-//
+#define FIREBASE_HOST                                     "aquaponics-monitoring.firebaseio.com"
+#define FIREBASE_AUTH                                     ""
+#define WIFI_SSID                                         "airuc-guest"
+#define DEVICE_NAME                                       "club01"
+
+
+// Open Source Licences Used:
+// 
 // Copyright 2015 Google Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +21,14 @@
 // limitations under the License.
 //
 
-// FirebaseRoom_ESP8266 is a sample that demo using multiple sensors
-// and actuactor with the FirebaseArduino library.
-
 #include <ESP8266WiFi.h>
 #include <FirebaseArduino.h>
 
-// Set these to run example.
-#define FIREBASE_HOST "aquaponics-monitoring.firebaseio.com"
-#define FIREBASE_AUTH "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
-#define WIFI_SSID "airuc-guest"
+
+
+//#define SERIAL_DEBUG_MODE
+#define UNSIGNED_LONG_MAX                                 2147483647
+
 
 struct VariableAndValue
 {
@@ -31,40 +36,54 @@ struct VariableAndValue
   float value;
 };
 
+unsigned long counter = 0;
+
 void setup() {
   Serial.begin(9600);
 
   // connect to wifi.
   WiFi.begin(WIFI_SSID);
+#ifdef SERIAL_DEBUG_MODE
   Serial.print("connecting to ");
   Serial.print(WIFI_SSID);
+#endif
   while (WiFi.status() != WL_CONNECTED) {
+#ifdef SERIAL_DEBUG_MODE
     Serial.print(".");
-    delay(500);
+#endif
+    delay(200);
   }
+#ifdef SERIAL_DEBUG_MODE
   Serial.println();
   Serial.print("connected: ");
   Serial.println(WiFi.localIP());
-
+#endif
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  counter = Firebase.getInt((String)DEVICE_NAME + "/" + counter);
 }
-
-int i = 0;
 
 void loop() {
 
   if (Serial.available()) {
     String stringRead = Serial.readString();
-    if (stringRead == "PUMP")
+    /* if (stringRead == "N")
+      deviceName = stringRead;
+    */
+    if (stringRead == "P")
     {
-      Serial.print((String)Firebase.getInt("pumpShouldBeOn"));
+      Serial.print((String)Firebase.getInt(DEVICE_NAME "/u")); //get the pump should be on value
+      counter++;
+      if (counter == UNSIGNED_LONG_MAX)
+        counter = 0;
+      Firebase.set(DEVICE_NAME "/c", counter); // Set the counter.
     }
-    else
+    else //if (deviceName != "")
     {
       VariableAndValue variableAndValue = getVariableAndValue(stringRead);
-      Firebase.set(variableAndValue.variable, variableAndValue.value);
+      Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.value);
     }
   }
+  delay(100);
 }
 
 VariableAndValue getVariableAndValue(String input)
@@ -73,7 +92,7 @@ VariableAndValue getVariableAndValue(String input)
   int colonLocation = input.indexOf(":");
   if (colonLocation == -1 || colonLocation + 1 == input.length())
   {
-    output.variable = "Error";
+    output.variable = DEVICE_NAME "/e"; // e is for error
     output.value = 1;
     return output;
   }
