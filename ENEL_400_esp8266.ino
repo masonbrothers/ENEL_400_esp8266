@@ -1,32 +1,13 @@
 #define FIREBASE_HOST                                     "aquaponics-monitoring.firebaseio.com"
 #define FIREBASE_AUTH                                     "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
-#define WIFI_SSID                                         "airuc-guest"
-#define DEVICE_NAME                                       "/club01"
-#define SERIAL_DEBUG_MODE
+//#define WIFI_SSID                                       "airuc-guest"
 
-// Open Source Licences Used:
-// 
-// Copyright 2015 Google Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//
+#define DEVICE_NAME                                       "club01"
+#define SERIAL_DEBUG_MODE
 
 #include <ESP8266WiFi.h>
 #include <FirebaseArduino.h>
 
-
-
-//#define SERIAL_DEBUG_MODE
 #define UNSIGNED_LONG_MAX                                 2147483647
 
 
@@ -42,7 +23,12 @@ void setup() {
   Serial.begin(9600);
 
   // connect to wifi.
+#ifdef WIFI_PSK
+  WiFi.begin(WIFI_SSID, WIFI_PSK);
+#else
   WiFi.begin(WIFI_SSID);
+#endif
+
 #ifdef SERIAL_DEBUG_MODE
   Serial.print("connecting to ");
   Serial.print(WIFI_SSID);
@@ -70,6 +56,7 @@ void setup() {
 #ifdef SERIAL_DEBUG_MODE
   Serial.println("Get Count" + (String)Firebase.success());
 #endif
+  Firebase.set("MASON", 1234);
 }
 
 void loop() {
@@ -109,7 +96,7 @@ VariableAndValue getVariableAndValue(String input)
   int colonLocation = input.indexOf(":");
   if (colonLocation == -1 || colonLocation + 1 == input.length())
   {
-    output.variable = DEVICE_NAME "/e"; // e is for error
+    output.variable = "e"; // e is for error
     output.value = 1;
     return output;
   }
