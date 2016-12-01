@@ -2,8 +2,10 @@
 #define FIREBASE_AUTH                                     "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
 //#define WIFI_SSID                                       "airuc-guest"
 
+
 #define DEVICE_NAME                                       "club01"
-#define SERIAL_DEBUG_MODE
+//#define SERIAL_DEBUG_MODE
+//#define DEBUG_WIFI_CONNECTION  //LEAVE THIS OFF UNLESS NEED MAC ADDRESS. THERE IS A BUG THAT WILL NOT ALLOW TO WRITE OUT TO FIREBASE.
 
 #include <ESP8266WiFi.h>
 #include <FirebaseArduino.h>
@@ -19,6 +21,7 @@ struct VariableAndValue
 
 unsigned long counter = 0;
 
+/*
 void setup() {
   Serial.begin(9600);
 
@@ -33,7 +36,8 @@ void setup() {
   Serial.print("connecting to ");
   Serial.print(WIFI_SSID);
 #endif
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) 
+  {
 #ifdef SERIAL_DEBUG_MODE
     Serial.print(".");
 #endif
@@ -50,22 +54,78 @@ void setup() {
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   Serial.println(Firebase.success());
   delay(1000);
+  
   counter = Firebase.getInt(DEVICE_NAME "/c");
   if (!Firebase.success())
     counter = 0;
 #ifdef SERIAL_DEBUG_MODE
   Serial.println("Get Count" + (String)Firebase.success());
 #endif
+  
   Firebase.set("MASON", 1234);
+  
+  Serial.println("TESTING!!!" + (String)Firebase.success());
+}
+*/
+void setup() {
+  Serial.begin(9600);
+
+  // connect to wifi.
+#ifdef WIFI_PSK
+  WiFi.begin(WIFI_SSID, WIFI_PSK);
+#else
+  WiFi.begin(WIFI_SSID);
+#endif
+#ifdef SERIAL_DEBUG_MODE
+  Serial.println("connecting to " + (String)WIFI_SSID);
+#endif
+
+  while (WiFi.status() != WL_CONNECTED) {
+#ifdef SERIAL_DEBUG_MODE
+    Serial.print(".");
+#endif
+    delay(200);
+  }
+#ifdef SERIAL_DEBUG_MODE
+  Serial.println();
+  Serial.print("Connected: ");
+#ifdef DEBUG_WIFI_CONNECTION
+  Serial.println("IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.print("MAC: ");
+  Serial.println(getMACAddress());
+#endif
+#endif
+
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  
+  counter = Firebase.getInt(DEVICE_NAME "/c");
+  if (!Firebase.success())
+    counter = 0;
+  
 }
 
+int i = 0;
+
+/*
+void loop() {
+
+  if (Serial.available()) {
+    String test = Serial.readString();
+    int x = test.toInt();
+    Serial.println(test);
+    String path = (String)"realTimeAmbientLight";
+    Firebase.set(path, x);
+  }
+}
+*/
 void loop() {
 
   if (Serial.available()) {
     String stringRead = Serial.readString();
-    /* if (stringRead == "N")
-      deviceName = stringRead;
-    */
+    //if (stringRead == "N")
+    //  deviceName = stringRead;
+    
     if (stringRead == "U")
     {
       boolean checkingPumpOn = (boolean)Firebase.getInt(DEVICE_NAME "/u"); //get the pump should be on value
@@ -89,6 +149,7 @@ void loop() {
   }
   delay(100);
 }
+
 
 VariableAndValue getVariableAndValue(String input)
 {
