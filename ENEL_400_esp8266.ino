@@ -1,8 +1,8 @@
 #define FIREBASE_HOST                                     "aquaponics-monitoring.firebaseio.com"
-#define FIREBASE_AUTH                                     ""
+#define FIREBASE_AUTH                                     "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
 #define WIFI_SSID                                         "airuc-guest"
-#define DEVICE_NAME                                       "club01"
-
+#define DEVICE_NAME                                       "/club01"
+#define SERIAL_DEBUG_MODE
 
 // Open Source Licences Used:
 // 
@@ -55,11 +55,21 @@ void setup() {
   }
 #ifdef SERIAL_DEBUG_MODE
   Serial.println();
-  Serial.print("connected: ");
+  Serial.print("Connected: ");
+  Serial.println("IP: ");
   Serial.println(WiFi.localIP());
+  Serial.print("MAC: ");
+  Serial.println(getMACAddress());
 #endif
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-  counter = Firebase.getInt((String)DEVICE_NAME + "/" + counter);
+  Serial.println(Firebase.success());
+  delay(1000);
+  counter = Firebase.getInt(DEVICE_NAME "/c");
+  if (!Firebase.success())
+    counter = 0;
+#ifdef SERIAL_DEBUG_MODE
+  Serial.println("Get Count" + (String)Firebase.success());
+#endif
 }
 
 void loop() {
@@ -69,18 +79,25 @@ void loop() {
     /* if (stringRead == "N")
       deviceName = stringRead;
     */
-    if (stringRead == "P")
+    if (stringRead == "U")
     {
-      Serial.print((String)Firebase.getInt(DEVICE_NAME "/u")); //get the pump should be on value
+      boolean checkingPumpOn = (boolean)Firebase.getInt(DEVICE_NAME "/u"); //get the pump should be on value
+      if (Firebase.success())
+        Serial.print((String)checkingPumpOn); 
       counter++;
       if (counter == UNSIGNED_LONG_MAX)
         counter = 0;
       Firebase.set(DEVICE_NAME "/c", counter); // Set the counter.
     }
-    else //if (deviceName != "")
+    else
     {
       VariableAndValue variableAndValue = getVariableAndValue(stringRead);
+#ifdef SERIAL_DEBUG_MODE
+      Serial.println(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter);
+      Serial.println(variableAndValue.value);
+#endif
       Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.value);
+
     }
   }
   delay(100);
@@ -99,5 +116,22 @@ VariableAndValue getVariableAndValue(String input)
   output.variable = input.substring(0, colonLocation);
   output.value = input.substring(colonLocation + 1).toFloat();
   return output;
+}
+
+String getMACAddress()
+{
+  WiFi.mode(WIFI_AP);
+  uint8_t mac[WL_MAC_ADDR_LENGTH];
+  WiFi.softAPmacAddress(mac);
+  String macID;
+  for (int i = (WL_MAC_ADDR_LENGTH - 1); i >= 0; i--)
+  {
+    macID += String(mac[WL_MAC_ADDR_LENGTH - i], HEX);
+    if (i != 0)
+      macID += ":";
+  }
+  
+  macID.toUpperCase();
+  return macID;
 }
 
