@@ -5,7 +5,7 @@
 #define WIFI_PSK "e245ce8bb252"
 
 #define DEVICE_NAME                                       "club01"
-#define SERIAL_DEBUG_MODE
+//#define SERIAL_DEBUG_MODE
 //#define DEBUG_WIFI_CONNECTION  //LEAVE THIS OFF UNLESS NEED MAC ADDRESS. THERE IS A BUG THAT WILL NOT ALLOW TO WRITE OUT TO FIREBASE.
 
 #include <ESP8266WiFi.h>
@@ -23,6 +23,52 @@ struct VariableAndValue
 
 unsigned long counter = 0;
 
+/*
+void setup() {
+  Serial.begin(9600);
+
+  // connect to wifi.
+#ifdef WIFI_PSK
+  WiFi.begin(WIFI_SSID, WIFI_PSK);
+#else
+  WiFi.begin(WIFI_SSID);
+#endif
+
+#ifdef SERIAL_DEBUG_MODE
+  Serial.print("connecting to ");
+  Serial.print(WIFI_SSID);
+#endif
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+#ifdef SERIAL_DEBUG_MODE
+    Serial.print(".");
+#endif
+    delay(200);
+  }
+#ifdef SERIAL_DEBUG_MODE
+  Serial.println();
+  Serial.print("Connected: ");
+  Serial.println("IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.print("MAC: ");
+  Serial.println(getMACAddress());
+#endif
+  Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
+  Serial.println(Firebase.success());
+  delay(1000);
+  
+  counter = Firebase.getInt(DEVICE_NAME "/c");
+  if (!Firebase.success())
+    counter = 0;
+#ifdef SERIAL_DEBUG_MODE
+  Serial.println("Get Count" + (String)Firebase.success());
+#endif
+  
+  Firebase.set("MASON", 1234);
+  
+  Serial.println("TESTING!!!" + (String)Firebase.success());
+}
+*/
 void setup() {
   Serial.begin(9600);
 
@@ -35,7 +81,6 @@ void setup() {
 #ifdef SERIAL_DEBUG_MODE
   Serial.println("connecting to " + (String)WIFI_SSID);
 #endif
-
   while (WiFi.status() != WL_CONNECTED) {
 #ifdef SERIAL_DEBUG_MODE
     Serial.print(".");
@@ -76,7 +121,6 @@ void loop() {
 }
 */
 void loop() {
-
   if (Serial.available()) {
     String stringRead = Serial.readString();
     //if (stringRead == "N")
@@ -90,7 +134,7 @@ void loop() {
       counter++;
       if (counter == UNSIGNED_LONG_MAX)
         counter = 0;
-      Firebase.setInt(DEVICE_NAME "/c", counter); // Set the counter.
+      Firebase.set(DEVICE_NAME "/c", counter); // Set the counter.
     }
     else
     {
@@ -100,11 +144,10 @@ void loop() {
       Serial.println(variableAndValue.floatValue);
       Serial.println(variableAndValue.intValue);
 #endif
-      if (stringRead == "t")
-        Firebase.setInt(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.intValue);
+      if (variableAndValue.variable == "t")
+        Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.intValue);
       else
-        Firebase.setFloat(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.floatValue);
-
+        Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.floatValue);
     }
   }
   delay(100);
