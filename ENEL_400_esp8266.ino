@@ -1,7 +1,8 @@
 #define FIREBASE_HOST                                     "aquaponics-monitoring.firebaseio.com"
 #define FIREBASE_AUTH                                     "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
 //#define WIFI_SSID                                       "airuc-guest"
-
+#define WIFI_SSID "AndroidAP"
+#define WIFI_PSK "e245ce8bb252"
 
 #define DEVICE_NAME                                       "club01"
 //#define SERIAL_DEBUG_MODE
@@ -79,7 +80,6 @@ void setup() {
 #ifdef SERIAL_DEBUG_MODE
   Serial.println("connecting to " + (String)WIFI_SSID);
 #endif
-
   while (WiFi.status() != WL_CONNECTED) {
 #ifdef SERIAL_DEBUG_MODE
     Serial.print(".");
