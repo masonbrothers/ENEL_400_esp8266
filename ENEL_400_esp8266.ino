@@ -1,8 +1,8 @@
 #define FIREBASE_HOST                                     "aquaponics-monitoring.firebaseio.com"
 #define FIREBASE_AUTH                                     "CKXyVCcy1n9XNYNNvEsbWzT9KSlexNa8VFM2k0Ch"
 //#define WIFI_SSID                                       "airuc-guest"
-#define WIFI_SSID "AndroidAP"
-#define WIFI_PSK "e245ce8bb252"
+#define WIFI_SSID "TR iPhone"
+#define WIFI_PSK "mingiscool"
 
 #define DEVICE_NAME                                       "club01"
 //#define SERIAL_DEBUG_MODE
@@ -101,12 +101,13 @@ void setup() {
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   
   counter = Firebase.getInt(DEVICE_NAME "/c");
+  delay(7000);
   if (!Firebase.success())
     counter = 0;
-  
+  Serial.flush();
 }
 
-int i = 0;
+
 
 /*
 void loop() {
@@ -125,29 +126,44 @@ void loop() {
     String stringRead = Serial.readString();
     //if (stringRead == "N")
     //  deviceName = stringRead;
-    
-    if (stringRead == "U")
+
+    if (stringRead.length() >= 1)
     {
-      boolean checkingPumpOn = (boolean)Firebase.getInt(DEVICE_NAME "/u"); //get the pump should be on value
-      if (Firebase.success())
-        Serial.print((String)checkingPumpOn); 
-      counter++;
-      if (counter == UNSIGNED_LONG_MAX)
-        counter = 0;
-      Firebase.set(DEVICE_NAME "/c", counter); // Set the counter.
-    }
-    else
-    {
-      VariableAndValue variableAndValue = getVariableAndValue(stringRead);
-#ifdef SERIAL_DEBUG_MODE
-      Serial.println(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter);
-      Serial.println(variableAndValue.floatValue);
-      Serial.println(variableAndValue.intValue);
-#endif
-      if (variableAndValue.variable == "t")
-        Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.intValue);
+      /*
+      if (stringRead[0] == 'U')
+      {
+        boolean checkingPumpOn = (boolean)Firebase.getInt(DEVICE_NAME "/u"); //get the pump should be on value
+        if (Firebase.success())
+          Serial.print((String)checkingPumpOn); 
+        counter++;
+        if (counter == UNSIGNED_LONG_MAX)
+          counter = 0;
+        Firebase.set(DEVICE_NAME "/c", counter); // Set the counter.
+      }
       else
-        Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.floatValue);
+      {
+      */
+        VariableAndValue variableAndValue = getVariableAndValue(stringRead);
+  #ifdef SERIAL_DEBUG_MODE
+        Serial.println(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter);
+        Serial.println(variableAndValue.floatValue);
+        Serial.println(variableAndValue.intValue);
+  #endif
+        if (variableAndValue.variable == "t")
+          Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.intValue);
+        else if (variableAndValue.variable == "U")
+        {
+          boolean checkingPumpOn = (boolean)Firebase.getInt(DEVICE_NAME "/u"); //get the pump should be on value
+          if (Firebase.success())
+            Serial.print((String)checkingPumpOn); 
+          counter++;
+          if (counter == UNSIGNED_LONG_MAX)
+            counter = 0;
+          Firebase.set(DEVICE_NAME "/c", counter); // Set the counter.
+        }
+        else
+          Firebase.set(DEVICE_NAME "/" + variableAndValue.variable + "/" + (String)counter, variableAndValue.floatValue);
+      //} //end else
     }
   }
   delay(100);
