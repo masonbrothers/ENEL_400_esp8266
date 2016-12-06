@@ -3,6 +3,9 @@
 //#define WIFI_SSID                                       "airuc-guest"
 #define WIFI_SSID "TR iPhone"
 #define WIFI_PSK "mingiscool"
+//#define WIFI_SSID "AndroidAP"
+//#define WIFI_PSK "sojhaliscool"
+
 
 #define DEVICE_NAME                                       "club01"
 //#define SERIAL_DEBUG_MODE
@@ -101,26 +104,17 @@ void setup() {
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
   
   counter = Firebase.getInt(DEVICE_NAME "/c");
-  delay(7000);
-  if (!Firebase.success())
-    counter = 0;
-  Serial.flush();
-}
-
-
-
-/*
-void loop() {
-
-  if (Serial.available()) {
-    String test = Serial.readString();
-    int x = test.toInt();
-    Serial.println(test);
-    String path = (String)"realTimeAmbientLight";
-    Firebase.set(path, x);
+  delay(4000);
+  while (!Firebase.success())
+  {
+    counter = Firebase.getInt(DEVICE_NAME "/c");
+    delay(4000);
   }
+  
+  Serial.flush();
+  flushInputSerial();
 }
-*/
+
 void loop() {
   if (Serial.available()) {
     String stringRead = Serial.readString();
@@ -169,6 +163,12 @@ void loop() {
   delay(100);
 }
 
+void flushInputSerial()
+{
+  while(Serial.available() > 0) {
+    char t = Serial.read();
+  }
+}
 
 VariableAndValue getVariableAndValue(String input)
 {
