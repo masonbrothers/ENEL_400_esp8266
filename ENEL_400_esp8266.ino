@@ -108,11 +108,13 @@ void setup() {
   while (!Firebase.success())
   {
     counter = Firebase.getInt(DEVICE_NAME "/c");
+    Firebase.setInt(DEVICE_NAME "/mason", counter);
     delay(4000);
   }
   
   Serial.flush();
   flushInputSerial();
+  Firebase.setInt(DEVICE_NAME "/mason", counter);
 }
 
 void loop() {
